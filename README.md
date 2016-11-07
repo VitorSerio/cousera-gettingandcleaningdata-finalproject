@@ -2,13 +2,13 @@
 
 ## Objectives
 This project aims to to merge the data from the dataset of the *UCI Human Activity Recognition Using Smartphones Dataset*, clean the data and make it more readable. Then, using the resulting data, all variables measuring means or standard deviations will have their means calculated and grouped by the subjects and the activities variables, generating a second, independent dataset. This dataset must follow the tidy format, defined by Hadley Wickham in his article *Tidy Data* as having the following characteristics:
-<ul><li>Each variable forms a column.</li>
-<li>Each observation forms a row.</li>
-<li>Each type of observational unit forms a table</li></ul>.  
+* Each variable forms a column.
+* Each observation forms a row.
+* Each type of observational unit forms a table. 
 
 ## Files discription
-<ul><li>run_analysis.R: R script with the code for processing the dataset stored in a folder called *UCI HAR Dataset* and saving the means dataset in a file named *tidy_data.txt*.</li>
-<li>CodeBook.md: Markdown file with the descriptions of the variables, the data, and any transformations or work performed to clean up the data</li></ul>.  
+* *run_analysis.R:* R script with the code for processing the dataset stored in a folder called *UCI HAR Dataset* and saving the means dataset in a file named *tidy_data.txt*.
+* *CodeBook.md*: Markdown file with the descriptions of the variables, the data, and any transformations or work performed to clean up the data. 
 
 ## Raw data
 
