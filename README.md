@@ -6,11 +6,11 @@ This project aims to to merge the data from the dataset of the *UCI Human Activi
 <li>Each observation forms a row.</li>
 <li>Each type of observational unit forms a table.</li></ul>  
 
-## Files discription
+.## Files discription
 <ul><li>run_analysis.R: R script with the code for processing the dataset stored in a folder called *UCI HAR Dataset* and saving the means dataset in a file named *tidy_data.txt*.</li>
 <li>CodeBook.md: Markdown file with the descriptions of the variables, the data, and any transformations or work performed to clean up the data.</li></ul>  
 
-## Raw data
+.## Raw data
 
 The raw data is separated in two sets: "test" and "train". Both sets have equivalent files and data, with only the values being different. So the description given to one set applies to the other.
 The "test" set has the following data tables with the following data:
