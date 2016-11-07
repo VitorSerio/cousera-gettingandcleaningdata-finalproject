@@ -1,209 +1,132 @@
+#### Checking if files are present
+## If there is no UCI HAR Dataset directory present, tries to download the zipped files and unzips
+## them
+if (!dir.exists("./UCI HAR Dataset/")) {
+    fileurl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
+    base <- basename(fileurl)
+    download.file(url, base, method = "auto")
+    unzip(base)
+    rm("fileurl", "base")
+}
+
 #### Loading of the used libraries.
 ## Verifies if data.table is installed and, if not, installs it, then loads it
 if (!("data.table" %in% installed.packages())) {install.packages("data.table")}
 library(data.table)
-## Verifies if lubridate is installed and, if it is, saves the current time for later use
-# if (("lubridate" %in% installed.packages())) {library(lubridate); start <- now()}
 
 #### Tidying the raw data
-## This variables will be used for all tables and are meant to save typing only
+## This variables are meant to save typing, avoiding typing errors
 sets <- c("test", "train")
 main_dir <- "./UCI HAR Dataset/"
 
-## subjectsactivities table
+## Getting Subjects and Activities data
 # Getting the labels for the activities
 activity_labels <- fread(paste0(main_dir,"activity_labels.txt"))
-setkey(activity_labels)
+
+# Getting the labels for the features, for later use
+feature_labels <- fread(paste0(main_dir,"features.txt"))
 
 # Adjusting the text of the labels
 activity_labels$V2 <- gsub("_", " ", tolower(activity_labels$V2))
 
-subjectsactivities <- list()
+data_set <- list()
 
 for (i in sets) {
     # Getting paths for files in the i folder
     dir <- paste0(main_dir, i, "/")
     files <- paste0(dir, list.files(dir))
     
-    # Reading the respective subject, feature and activity files of the i set
-    subject <- fread(files[2])
+    # Reading the respective subject and activity files of the i set
+    subject <- fread(files[2])[, V1]
     activity <- fread(files[4])
     
-    # Replacing the activity numbers by their names, as it is labeled in activity_labels
-    setkey(activity)
-    activity <- activity[activity_labels, nomatch = 0][, V2]
+    # Replaces the activity numbers by their names, as t is labeled in activity_labels
+    activity <- activity[, V1 := activity_labels[activity[, V1], V2]][, V1]
     
-    # Setting up the i table for the subjecactivities list
-    subjectsactivities[[i]] <- data.table(set = i,
-                                          window = c(1:length(activity)),
-                                          subject = subject[, V1],
-                                          activity = activity)
+    # Getting the length of activity as this value will be used later several times
+    n <- length(activity)
     
-    rm("dir", "files", "subject", "activity")
-}
-
-rm("i", "activity_labels")
-
-# Binding both tables inside subjectsactivities into one
-subjectsactivities <- rbind(subjectsactivities[[sets[1]]],
-                            subjectsactivities[[sets[2]]])
-
-# Writing the result table into a .csv file
-#fwrite(subjectsactivities, file = "./Tidy Dataset/subjectsactivities.csv")
-
-#rm("subjectsactivities")
-
-## readings table
-
-readings <- list()
-
-for (i in sets) {
+    # Setting up the i table for the data_set list and keys it
+    data_set[[i]] <- data.table(set = i,
+                                window = c(1:n),
+                                subject = subject,
+                                activity = activity)
+    rm("subject", "activity")
+    
+    ## Getting the Inertial Signals data
     # Getting the paths for files in the Inertial Signals folder
     dir <- paste0(main_dir, i, "/Inertial Signals/")
     files <- paste0(dir, list.files(dir))
     
     for (j in files) {
         # Reading the file
-        raw_data <- fread(j)
+        file_data <- fread(j)
         
-        # If it is the first iteration, gets the nrow and names of raw_data, to save computation
-        # raw_names needs to be obtained only once
-        if (j == files[1]) {
-            raw_nrow <- nrow(raw_data)
-            if (i == sets[1]) {raw_names <- names(raw_data)}
-        }
+        # Labels the columns of file_data with the file name (without directory and extension),
+        # while also removing the test/train, as it won't be necessary, attached to the V1:V128
+        file_name <- gsub(paste0("(",dir,")|(.txt)|_",i), "", j)
+        names(file_data) <- paste0(file_name, names(file_data))
         
-        # Setting the file_data and binding the raw_data to it
-        file_data <- data.table(window = c(1:raw_nrow))
-        file_data <- cbind(file_data, raw_data)
+        # Adds the set and window columns, puts them as the first columns and keys the table
+        file_data <- file_data[, `:=` (set = i, window = c(1:n))]
+        setcolorder(file_data, c("set", "window", names(file_data)[1:128]))
         
-        rm("raw_data")
-        
-        # Filters and splits j, to get a list of four values containing the vector 
-        # readings information: body/total, acc/gyro, x/y/z and train/test
-        value_name <- gsub(paste0("(",dir,")|(.txt)"), "", j)
-        value_name <- strsplit(value_name, "_")
-        # Putting it all together
-        value_name <- paste0(value_name[[1]][1], ## body/total
-                             ifelse(value_name[[1]][2] == "acc", ## acc/gyro
-                                    "acceleration",
-                                    "velocity"),
-                             value_name[[1]][3]) ## x/y/z
-        
-        # Tidying the file_data
-        file_data <- melt(file_data, id.vars = "window", measure.vars = raw_names)
-        names(file_data) <- c("window", "reading", value_name)
-        file_data[, reading := as.integer(gsub("V", "", reading))]
-        setkey(file_data)
-        
-        # If this is the first iteration, sets the i item on readings to be file_data, otherwise
-        # add the values file_data to the existing table
-        ifelse(j == files[1],
-               readings[[i]] <- file_data,
-               readings[[i]] <- merge(readings[[i]], file_data, all.x = T))
-        
-        setkey(readings[[i]])
-        
-        rm("file_data", "value_name")
-        
+        # Merges file_data to the i data.table in data_set
+        data_set[[i]] <- data_set[[i]][file_data, on= c("set", "window")]
     }
     
-    rm("dir", "files", "raw_nrow")
-    
-    ## Adds a set column with value i and places it as the first column
-    readings[[i]][, `:=` (set = i)]
-    setcolorder(readings[[i]], c("set", names(readings[[i]])[1:11]))
-}
-
-rm("i", "j", "raw_names")
-
-# Binding both tables inside readings into one
-readings <- rbind(readings[[sets[1]]], readings[[sets[2]]])
-
-# Writing the result table into a .csv file
-#fwrite(readings, file = "./Tidy Dataset/readings.csv")
-
-#rm("readings")
-
-## features tables
-targets <- c("mean\\(\\)", "std\\(\\)", "meanFreq\\(\\)")
-
-# Getting the labels for the y_test/train columns
-feature_labels <- fread(paste0(main_dir,"features.txt"))
-
-features <- list()
-
-for (i in sets) {
+    ## Getting the Features data
     # Reading the file with the features data
     file_data <- fread(paste0(main_dir, i, "/X_", i, ".txt"))
     
     # Inputting the column names
     names(file_data) <- feature_labels[, V2]
     
-    # Filtering the data to get only the mean(), meanFreq() and std() variables
-    file_data <- file_data[, c(grep("mean|std", names(file_data), value = T)), with = F]
+    # Adds the set and window columns, puts them as the first columns
+    file_data <- file_data[, `:=` (set = i, window = c(1:n))]
     
-    # Cleaning the column names
-    names(file_data) <- gsub("^t", "time ", names(file_data))
-    names(file_data) <- gsub("^f", "FFT ", names(file_data))
-    names(file_data) <- gsub("Body", "body ", names(file_data))
-    names(file_data) <- gsub("Gravity", "gravity ", names(file_data))
-    names(file_data) <- gsub("Acc", "acceleration ", names(file_data))
-    names(file_data) <- gsub("Gyro", "velocity ", names(file_data))
-    names(file_data) <- gsub("X$", "x", names(file_data))
-    names(file_data) <- gsub("Y$", "y", names(file_data))
-    names(file_data) <- gsub("Z$", "z", names(file_data))
-    names(file_data) <- gsub("[Jj]erk", "jerk ", names(file_data))
-    names(file_data) <- gsub("Mag", "magnitude", names(file_data))
-    names(file_data) <- gsub("-", "", names(file_data))
-    
-    
-    file_data <- file_data[, `:=` (window = c(1:nrow(file_data)))]
-    
-    for (j in targets) {
-        # Fruther filtering to get only the data needed for each iteration and cleaning even more
-        # the column names
-        temp_data <- file_data[, c("window", grep(j, names(file_data), value = T)), with = F]
-        names(temp_data) <- gsub(j, "", names(temp_data))
-        
-        # Tidying the temp_data
-        temp_data <- melt(temp_data, id.vars = "window")
-        names(temp_data) <- c("window", "signal", j)
-        
-        setkey(temp_data)
-        
-        # If this is the first iteration, sets the i item on features to be temp_data, otherwise
-        # add the values temp_data to the existing table
-        ifelse(j == targets[1],
-               features[[i]] <- temp_data,
-               features[[i]] <- merge(features[[i]], temp_data, all.x = T))
-        
-        setkey(features[[i]])
-        
-        rm("temp_data")
-    }
-    
-    rm("file_data")
-    
-    ## Adds a set column with value i and places it as the first column
-    features[[i]][, `:=` (set = i)]
-    setcolorder(features[[i]], c("set", names(features[[i]])[1:5]))
-    names(features[[i]]) <- c("set", "window", "signal", "mean", "standarddeviation", "meanfrequency")
+    # Merges file_data to the i data.table in data_set
+    data_set[[i]] <- data_set[[i]][file_data, on= c("set", "window")]
 }
+rm("file_data", "i", "j", "file_name", "n", "main_dir", "dir", "files", "activity_labels")
 
-rm("j", "i", "main_dir", "targets", "feature_labels")
+# Binding the two data.tables inside data_set into one
+data_set <- rbind(data_set[[sets[1]]], data_set[[sets[2]]])
+rm("sets")
 
-# Binding both tables inside features into one
-features <- rbind(features[[sets[1]]], features[[sets[2]]])
+# Getting the subject and activity columns together with all the other columns of mean and standard
+# deviations measurements
+tidy_data <- data_set[, c("subject", "activity",
+                          grep("mean|std", feature_labels[, V2], value = T)),
+                      with = F]
+rm("feature_labels")
 
-# Writing the resulting table into a csv file
-#fwrite(features, file = "./Tidy Dataset/features.csv")
+# Cleaning the column names
+names(tidy_data) <- gsub("^t", "time_", names(tidy_data))
+names(tidy_data) <- gsub("^f", "FFT_", names(tidy_data))
+names(tidy_data) <- gsub("Body", "body_", names(tidy_data))
+names(tidy_data) <- gsub("Gravity", "gravity_", names(tidy_data))
+names(tidy_data) <- gsub("Acc", "acceleration_", names(tidy_data))
+names(tidy_data) <- gsub("Gyro", "velocity_", names(tidy_data))
+names(tidy_data) <- gsub("X$", "_x", names(tidy_data))
+names(tidy_data) <- gsub("Y$", "_y", names(tidy_data))
+names(tidy_data) <- gsub("Z$", "_z", names(tidy_data))
+names(tidy_data) <- gsub("[Jj]erk", "jerk_", names(tidy_data))
+names(tidy_data) <- gsub("Mag", "magnitude_", names(tidy_data))
+names(tidy_data) <- gsub("-|\\(|\\)", "", names(tidy_data))
 
-write.table(subjectsactivities, "alltables.txt", row.names = F, append = T)
-write.table(readings, "alltables.txt", row.names = F, append = T)
-write.table(features, "alltables.txt", row.names = F, append = T)
+# Calcutlation of the mean for each variable grouped by subject and activity
+tidy_data <- tidy_data[, lapply(.SD, mean), by = .(subject, activity)]
 
-#rm("sets", "features")
+# Addin a "_mean" string at the end of the names of the variables that had their means calculated
+names(tidy_data)[3:length(names(tidy_data))] <-
+    paste0(names(tidy_data)[3:length(names(tidy_data))],
+           "_mean")
 
-# Prints how much time it took to run the entire script
-# if (("lubridate" %in% loadedNamespaces())) {print(now() - start); rm("start")}
+# Writing the tidy_data into a txt file
+# If the data.table package version is 1.9.7, it will use the fwrite function, otherwise, uses the
+# write.table function
+# Note: data.table package version is 1.9.7 as of this date (2016-11-7) is still under development
+if (packageVersion("data.table") == as.package_version("1.9.7")) {
+    fwrite(tidy_data, "tidy_data.txt", row.names = F)
+} else {write.table(tidy_data, "tidy_data.txt", row.names = F)}
