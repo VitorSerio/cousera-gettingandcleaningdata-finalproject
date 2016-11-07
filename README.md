@@ -14,18 +14,14 @@ This project aims to to merge the data from the dataset of the *UCI Human Activi
 
 The raw data is separated in two sets: "test" and "train". Both sets have equivalent files and data, with only the values being different. So the description given to one set applies to the other.
 The "test" set has the following data tables with the following data:
-<ul>
-<li>9 tables with the values for body linear acceleration, body angular velocity and total linear acceleration on each axis (x, y and z). All inside a folder called *Inertial Signals*.</li>
-<li>*y_test.txt*: has the features values, obtained by doing several different calculations with the data from the *Inertial Signals* folder.</li>
-<li>*subject_test.txt*: single-column table with the id of the subject related to each window.</li>
-<li>*X_test.txt*: single-column table with the code of the activity that was being performed in each window.</li>
-</ul>
+* 9 tables with the values for body linear acceleration, body angular velocity and total linear acceleration on each axis (x, y and z). All inside a folder called *Inertial Signals*.
+* *y_test.txt*: has the features values, obtained by doing several different calculations with the data from the *Inertial Signals* folder.
+* *subject_test.txt*: single-column table with the id of the subject related to each window.
+* *X_test.txt*: single-column table with the code of the activity that was being performed in each window.
 
 Besides these files, there are other two generic files (that applies to both sets), called:
-<ul>
-<li>*activity_labels.txt*: has the labels with the actual names for each activity number.</li>
-<li>*features.txt*: heas the labels for each column in the *y_test.txt* table.</li>
-</ul>
+* *activity_labels.txt*: has the labels with the actual names for each activity number.
+* *features.txt*: heas the labels for each column in the *y_test.txt* table.
 
 The windows are relative to each row of every table of each set. The "test" set has 2947 windows and the "train" set has 7352.
 
