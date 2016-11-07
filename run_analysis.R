@@ -188,6 +188,7 @@ for (i in sets) {
     ## Adds a set column with value i and places it as the first column
     features[[i]][, `:=` (set = i)]
     setcolorder(features[[i]], c("set", names(features[[i]])[1:5]))
+    names(features[[i]]) <- c("set", "window", "signal", "mean", "standarddeviation", "meanfrequency")
 }
 
 rm("j", "i", "main_dir", "targets", "feature_labels")
