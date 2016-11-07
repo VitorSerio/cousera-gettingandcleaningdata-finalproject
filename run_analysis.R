@@ -123,6 +123,9 @@ names(tidy_data)[3:length(names(tidy_data))] <-
     paste0(names(tidy_data)[3:length(names(tidy_data))],
            "_mean")
 
+# Sorting the table in crescenting order for subjects and activities
+tidy_data <- tidy_data[order(subject, activity)]
+
 # Writing the tidy_data into a txt file
 # If the data.table package version is 1.9.7, it will use the fwrite function, otherwise, uses the
 # write.table function
