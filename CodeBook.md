@@ -1,32 +1,4 @@
-### 1. Data
-
-The raw data was separated in two sets: "test" and "train". Both sets had the same kind of variables so, following the tidy data rules, they had to be put together.
-In each set, there were the following data tables with the following data:
-<ul>
-<li>Features</li>
-<li>Subjecs</li>
-<li>Activities</li>
-<li>9 tables with the values for body linear acceleration, body angular velocity and total linear acceleration on each axis (x, y and z)</li>
-</ul>
-
-There were also other files with the labels for the activities and the features.
-
-#### 1.1 Readings table
-
-The 9 tables with the accelerations and velocities were obtained with readings from the accelerometer and gyroscope of the smartphone (Samsung Galaxy S II) and, therefore composed of a single type of variable and should be put together in a single table.  
-For that, it was necessary to melt the data tables individually before binding them together, for each set, and, then, bind the resulting tables from each set together as well.
-
-#### 1.2 Features table
-
-Then the features were decided to form another type of variable, since they were calculated later with the data from what now is the *readings* table. This one required to use the feature labels to name the columns properly and, then, filter only the columns needed, which were the means and standard deviations ones.  
-Again, the data had to be molten and the labels had to be cleaned so that the names would be more meaningful.
-
-#### 1.3 Subjects and activities data
-
-The subjects and activities were part of the raw data, but they weren't obtained through readings of the smartphone. Because of that, they were decided to be put together as another type of variable.  
-Their data was almost tidy the way they came, only requiring to bind them and to change the data for activities from numerical code to the respective strings, so that it would be more intuitive to use.
-
-### 2. Tables and variables:
+### Tables and variables:
 
 <ul>
 <li>Table 1:

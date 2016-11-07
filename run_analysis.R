@@ -49,9 +49,9 @@ subjectsactivities <- rbind(subjectsactivities[[sets[1]]],
                             subjectsactivities[[sets[2]]])
 
 # Writing the result table into a .csv file
-fwrite(subjectsactivities, file = "./Tidy Dataset/subjectsactivities.csv")
+#fwrite(subjectsactivities, file = "./Tidy Dataset/subjectsactivities.csv")
 
-rm("subjectsactivities")
+#rm("subjectsactivities")
 
 ## readings table
 
@@ -121,9 +121,9 @@ rm("i", "j", "raw_names")
 readings <- rbind(readings[[sets[1]]], readings[[sets[2]]])
 
 # Writing the result table into a .csv file
-fwrite(readings, file = "./Tidy Dataset/readings.csv")
+#fwrite(readings, file = "./Tidy Dataset/readings.csv")
 
-rm("readings")
+#rm("readings")
 
 ## features tables
 targets <- c("mean\\(\\)", "std\\(\\)", "meanFreq\\(\\)")
@@ -197,9 +197,13 @@ rm("j", "i", "main_dir", "targets", "feature_labels")
 features <- rbind(features[[sets[1]]], features[[sets[2]]])
 
 # Writing the resulting table into a csv file
-fwrite(features, file = "./Tidy Dataset/features.csv")
+#fwrite(features, file = "./Tidy Dataset/features.csv")
 
-rm("sets", "features")
+write.table(subjectsactivities, "alltables.txt", row.names = F, append = T)
+write.table(readings, "alltables.txt", row.names = F, append = T)
+write.table(features, "alltables.txt", row.names = F, append = T)
+
+#rm("sets", "features")
 
 # Prints how much time it took to run the entire script
 # if (("lubridate" %in% loadedNamespaces())) {print(now() - start); rm("start")}
